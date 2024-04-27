@@ -59,7 +59,7 @@ public class Player : EntityBeing
             {
                 onSkillChangeEvent?.Invoke(value);
             }
-            _manaPoints = value;
+            _manaPoints = value > 5 ? 5 : manaPoints;
         }
     }
 
