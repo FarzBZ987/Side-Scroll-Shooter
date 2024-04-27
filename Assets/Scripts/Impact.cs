@@ -4,9 +4,14 @@ using UnityEngine;
 
 public class Impact : MonoBehaviour
 {
-    private void Start()
+    private void OnEnable()
     {
         Bullet.onImpactActions += InitializeHitStop;
+    }
+
+    private void OnDisable()
+    {
+        Bullet.onImpactActions -= InitializeHitStop;
     }
 
     private void InitializeHitStop()
