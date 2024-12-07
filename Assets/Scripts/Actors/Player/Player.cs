@@ -32,9 +32,11 @@ public class Player : EntityBeing
     [SerializeField] private Joystick joystick;
 
     // Basic variables
-    private float horizontal;
+    private float m_horizontal;
 
-    private float vertical;
+    public float horizontal => m_horizontal;
+    private float m_vertical;
+    public float vertical => m_vertical;
     private Vector3 Movement = Vector3.zero;
     [Range(0, 5)] private float _manaPoints;
     [Range(0, 20)] private float _burstPoints;
@@ -42,6 +44,23 @@ public class Player : EntityBeing
     private float requiredBurstPoints = 10;
     private bool attackPrepared;
     private bool canMove;
+
+    // States
+
+    private StateMachine currentState;
+    private StateMachine prevState;
+
+    private Idle m_idle;
+    private Moving m_moving;
+    private Attack m_attack;
+    private Skill m_skill;
+    private Ultimate m_ultimate;
+
+    public Idle idle => m_idle;
+    public Moving moving => m_moving;
+    public Attack attack => m_attack;
+    public Skill skill => m_skill;
+    public Ultimate ultimate => m_ultimate;
 
     // For scale modification. Flipping scale is easier than moving where the shooting location is
     // Won't recommend for anything with Collider or turnables. This one flipping the inner sprite of collider object
@@ -79,6 +98,8 @@ public class Player : EntityBeing
     // Start is called before the first frame update
     private void Start()
     {
+        m_idle = new Idle(this);
+        m_attack = new Attack(this);
         burstPoints = 0;
         manaPoints = 5;
         PrepareAttack();
@@ -93,7 +114,7 @@ public class Player : EntityBeing
     private void Update()
     {
         SetMovement();
-        if ((horizontal != 0 || vertical != 0) && canMove)
+        if ((m_horizontal != 0 || m_vertical != 0) && canMove)
         {
             Move();
         }
@@ -106,15 +127,15 @@ public class Player : EntityBeing
     {
         if (joystick != null)
         {
-            horizontal = joystick.Horizontal;
-            vertical = joystick.Vertical;
+            m_horizontal = joystick.Horizontal;
+            m_vertical = joystick.Vertical;
         }
         else
         {
-            horizontal = 0;
-            vertical = 0;
+            m_horizontal = 0;
+            m_vertical = 0;
         }
-        Movement.Set(horizontal, vertical, 0);
+        Movement.Set(m_horizontal, m_vertical, 0);
         Movement.Normalize();
     }
 
@@ -127,7 +148,7 @@ public class Player : EntityBeing
         }
         animator.SetFloat("Moving", 1);
         rb.velocity = Movement;
-        playerSprite.transform.localScale = horizontal < 0 ? flippedScale : originalScale;
+        playerSprite.transform.localScale = m_horizontal < 0 ? flippedScale : originalScale;
     }
 
     private void Idle()
@@ -236,5 +257,13 @@ public class Player : EntityBeing
         ActionButtons.onUltimateClicked -= Ultimate;
         animator.SetTrigger("Die");
         canMove = false;
+    }
+
+    public void SetState(StateMachine newState)
+    {
+        prevState = currentState;
+        prevState.OnExit();
+        currentState = newState;
+        currentState.OnEnter();
     }
 }
